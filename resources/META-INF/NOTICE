@@ -1,0 +1,20 @@
+xia_yue_plus (xia Yue Plus V1.3)
+================================
+
+基于 xia Yue V1.2 (作者: 算命编子, www.t00ls.net) 修改，新增敏感数据差集检测与行染色。
+
+本扩展包含/引用的第三方组件：
+
+1. HaE - Highlighter and Extractor
+   Copyright 2016-2025 gh0stkey and HaE contributors
+   https://github.com/gh0stkey/HaE
+   License: Apache License 2.0
+   规则文件定位/首启初始化逻辑与规则字段映射部分借鉴自 HaE（已注明修改）；
+   默认规则文件 rules/Rules.yml 取自 HaE 项目规则集。
+
+2. SnakeYAML
+   Copyright 2008-2023 Andrey Somov and snakeyaml contributors
+   https://bitbucket.org/snakeyaml/snakeyaml
+   License: Apache License 2.0
+
+本扩展及其捆绑组件均以 Apache License 2.0 授权，详见 META-INF/LICENSE。
