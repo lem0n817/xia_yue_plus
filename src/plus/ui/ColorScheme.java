@@ -22,7 +22,7 @@ public final class ColorScheme {
         COLORS.put("cyan", new Color(102, 255, 255));
         COLORS.put("blue", new Color(102, 153, 255));
         COLORS.put("green", new Color(102, 255, 102));
-        COLORS.put("gray", new Color(153, 153, 153));
+        COLORS.put("gray", new Color(204, 204, 204));
     }
 
     private ColorScheme() {
