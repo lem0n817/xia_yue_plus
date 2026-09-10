@@ -645,7 +645,8 @@ IMessageEditorController {
                         if (this.isRowSelected(row)) {
                             bg = this.getSelectionBackground();
                         } else if (entry.matchedColor != null) {
-                            bg = ColorScheme.blend(this.getBackground(), ColorScheme.of(entry.matchedColor), 0.45f);
+                            // 直接使用 Burp 原生高亮色（全饱和，与 Proxy history 一致），不做透明度混合
+                            bg = ColorScheme.of(entry.matchedColor);
                         } else {
                             bg = this.getBackground();
                         }

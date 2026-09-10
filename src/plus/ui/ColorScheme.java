@@ -13,15 +13,16 @@ public final class ColorScheme {
     private static final Map<String, Color> COLORS = new HashMap<String, Color>();
 
     static {
-        COLORS.put("red", new Color(225, 65, 65));
-        COLORS.put("orange", new Color(240, 140, 20));
-        COLORS.put("magenta", new Color(200, 40, 200));
-        COLORS.put("pink", new Color(240, 100, 170));
-        COLORS.put("yellow", new Color(216, 186, 0));
-        COLORS.put("cyan", new Color(20, 170, 180));
-        COLORS.put("blue", new Color(70, 120, 220));
-        COLORS.put("green", new Color(70, 160, 70));
-        COLORS.put("gray", new Color(130, 130, 130));
+        // 与 Burp 原生 highlight 色板一致（亮色主题），保证与 Proxy history 高亮观感相同
+        COLORS.put("red", new Color(255, 102, 102));
+        COLORS.put("orange", new Color(255, 166, 102));
+        COLORS.put("magenta", new Color(255, 102, 255));
+        COLORS.put("pink", new Color(255, 153, 255));
+        COLORS.put("yellow", new Color(255, 255, 102));
+        COLORS.put("cyan", new Color(102, 255, 255));
+        COLORS.put("blue", new Color(102, 153, 255));
+        COLORS.put("green", new Color(102, 255, 102));
+        COLORS.put("gray", new Color(153, 153, 153));
     }
 
     private ColorScheme() {
