@@ -639,9 +639,18 @@ IMessageEditorController {
                 synchronized (entries) {
                     if (row >= 0 && row < entries.size()) {
                         LogEntry entry = entries.get(row);
-                        // 选中行也叠规则色：以当前背景（含选择底色）为基色混合，效果类似 Proxy 的遮罩
                         if (entry.matchedColor != null) {
-                            c.setBackground(ColorScheme.blend(c.getBackground(), ColorScheme.of(entry.matchedColor), 0.45f));
+                            // 本色 = 表格标准底色 + 规则色；选中时把选择色当半透明遮罩叠上去，
+                            // 基色永远取表格标准底色而不是渲染器缓存值，避免多次点击/多选时串色叠深
+                            Color own = ColorScheme.blend(this.getBackground(), ColorScheme.of(entry.matchedColor), 0.45f);
+                            c.setBackground(this.isRowSelected(row)
+                                    ? ColorScheme.blend(own, this.getSelectionBackground(), 0.35f)
+                                    : own);
+                        } else {
+                            // 未染色行显式复位，防止渲染器缓存上一行的混合色
+                            c.setBackground(this.isRowSelected(row)
+                                    ? this.getSelectionBackground()
+                                    : this.getBackground());
                         }
                     }
                 }
