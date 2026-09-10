@@ -639,19 +639,17 @@ IMessageEditorController {
                 synchronized (entries) {
                     if (row >= 0 && row < entries.size()) {
                         LogEntry entry = entries.get(row);
-                        if (entry.matchedColor != null) {
-                            // 本色 = 表格标准底色 + 规则色；选中时把选择色当半透明遮罩叠上去，
-                            // 基色永远取表格标准底色而不是渲染器缓存值，避免多次点击/多选时串色叠深
-                            Color own = ColorScheme.blend(this.getBackground(), ColorScheme.of(entry.matchedColor), 0.45f);
-                            c.setBackground(this.isRowSelected(row)
-                                    ? ColorScheme.blend(own, this.getSelectionBackground(), 0.35f)
-                                    : own);
+                        // 选中行完全交给 Burp 默认选择色（不做遮罩干预）；仅未选中的染色行上规则色。
+                        // 每行都显式复位背景（基色取表格标准底色而非渲染器缓存值），避免多次点击/多选串色。
+                        Color bg;
+                        if (this.isRowSelected(row)) {
+                            bg = this.getSelectionBackground();
+                        } else if (entry.matchedColor != null) {
+                            bg = ColorScheme.blend(this.getBackground(), ColorScheme.of(entry.matchedColor), 0.45f);
                         } else {
-                            // 未染色行显式复位，防止渲染器缓存上一行的混合色
-                            c.setBackground(this.isRowSelected(row)
-                                    ? this.getSelectionBackground()
-                                    : this.getBackground());
+                            bg = this.getBackground();
                         }
+                        c.setBackground(bg);
                     }
                 }
             }
