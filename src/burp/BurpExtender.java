@@ -73,6 +73,7 @@ IMessageEditorController {
     public PrintWriter stdout;
     JTabbedPane tabs;
     int switchs = 0;
+    boolean onlyUnauth = false;
     int conut = 0;
     int original_data_len;
     String temp_data;
@@ -117,12 +118,20 @@ IMessageEditorController {
                 jp.setLayout(new GridLayout(1, 1));
                 jp.add(scrollPane);
                 JPanel jps = new JPanel();
-                jps.setLayout(new GridLayout(12, 1));
+                jps.setLayout(new GridLayout(13, 1));
                 JLabel jls = new JLabel("\u63d2\u4ef6\u540d\uff1a\u778e\u8d8a author\uff1a\u7b97\u547d\u7e16\u5b50\u3001lemoni");
                 JLabel jls_1 = new JLabel("\u5410\u53f8:www.t00ls.com");
                 JLabel jls_2 = new JLabel("\u7248\u672c\uff1axia Yue Plus V1.3");
                 JLabel jls_3 = new JLabel("\u611f\u8c22\u540d\u5355\uff1aMoonlit");
                 final JCheckBox chkbox1 = new JCheckBox("\u542f\u52a8\u63d2\u4ef6");
+                final JCheckBox chkOnlyUnauth = new JCheckBox("仅测未授权");
+                chkOnlyUnauth.addItemListener(new ItemListener(){
+
+                    @Override
+                    public void itemStateChanged(ItemEvent e) {
+                        BurpExtender.this.onlyUnauth = chkOnlyUnauth.isSelected();
+                    }
+                });
                 final JCheckBox chkbox2 = new JCheckBox("\u542f\u52a8\u4e07\u80fdcookie");
                 JLabel jls_5 = new JLabel("\u5982\u679c\u9700\u8981\u591a\u4e2a\u57df\u540d\u52a0\u767d\u8bf7\u7528,\u9694\u5f00");
                 final JTextField textField = new JTextField("\u586b\u5199\u767d\u540d\u5355\u57df\u540d");
@@ -215,6 +224,7 @@ IMessageEditorController {
                 jps.add(jls_2);
                 jps.add(jls_3);
                 jps.add(chkbox1);
+                jps.add(chkOnlyUnauth);
                 jps.add(btn1);
                 jps.add(jls_5);
                 jps.add(textField);
@@ -371,26 +381,31 @@ IMessageEditorController {
         String request = this.helpers.bytesToString(baseRequestResponse.getRequest());
         int bodyOffset = analyIRequestInfo.getBodyOffset();
         byte[] body = request.substring(bodyOffset).getBytes();
-        List<String> headers_y = analyIRequestInfo.getHeaders();
-        String[] data_1_list = this.data_1.split("\n");
-        for (int i = 0; i < headers_y.size(); ++i) {
-            String head_key = headers_y.get(i).split(":")[0];
-            for (String line : data_1_list) {
-                if (!head_key.equals(line.split(":")[0])) continue;
-                headers_y.remove(i);
-                break;
+        IHttpRequestResponse requestResponse_y = null;
+        byte[] lowResp = null;
+        String low_len_data = "-";
+        if (!this.onlyUnauth) {
+            List<String> headers_y = analyIRequestInfo.getHeaders();
+            String[] data_1_list = this.data_1.split("\n");
+            for (int i = 0; i < headers_y.size(); ++i) {
+                String head_key = headers_y.get(i).split(":")[0];
+                for (String line : data_1_list) {
+                    if (!head_key.equals(line.split(":")[0])) continue;
+                    headers_y.remove(i);
+                    break;
+                }
             }
+            for (String line : data_1_list) {
+                if (line.trim().isEmpty()) continue;
+                headers_y.add(headers_y.size() / 2, line);
+            }
+            stripAcceptEncoding(headers_y);
+            byte[] newRequest_y = this.helpers.buildHttpMessage(headers_y, body);
+            requestResponse_y = this.callbacks.makeHttpRequest(iHttpService, newRequest_y);
+            lowResp = requestResponse_y == null ? null : requestResponse_y.getResponse();
+            int low_len = lowResp == null ? 0 : lowResp.length - this.helpers.analyzeResponse(lowResp).getBodyOffset();
+            low_len_data = original_len == 0 ? Integer.toString(low_len) : (original_len == low_len ? Integer.toString(low_len) + "  \u2714" : Integer.toString(low_len) + "  ==> " + Integer.toString(original_len - low_len));
         }
-        for (String line : data_1_list) {
-            if (line.trim().isEmpty()) continue;
-            headers_y.add(headers_y.size() / 2, line);
-        }
-        stripAcceptEncoding(headers_y);
-        byte[] newRequest_y = this.helpers.buildHttpMessage(headers_y, body);
-        IHttpRequestResponse requestResponse_y = this.callbacks.makeHttpRequest(iHttpService, newRequest_y);
-        byte[] lowResp = requestResponse_y == null ? null : requestResponse_y.getResponse();
-        int low_len = lowResp == null ? 0 : lowResp.length - this.helpers.analyzeResponse(lowResp).getBodyOffset();
-        String low_len_data = original_len == 0 ? Integer.toString(low_len) : (original_len == low_len ? Integer.toString(low_len) + "  \u2714" : Integer.toString(low_len) + "  ==> " + Integer.toString(original_len - low_len));
         List<String> headers_w = analyIRequestInfo.getHeaders();
         String[] data_2_list = this.data_2.split("\n");
         for (int i = 0; i < headers_w.size(); ++i) {
@@ -438,7 +453,7 @@ IMessageEditorController {
 
         ++this.conut;
         int id = this.conut;
-        this.log.add(new LogEntry(id, analyIRequestInfo.getMethod(), this.callbacks.saveBuffersToTempFiles(baseRequestResponse), this.callbacks.saveBuffersToTempFiles(requestResponse_y), this.callbacks.saveBuffersToTempFiles(requestResponse_w), url, original_len, low_len_data, original_len_data, matchedColor));
+        this.log.add(new LogEntry(id, analyIRequestInfo.getMethod(), this.callbacks.saveBuffersToTempFiles(baseRequestResponse), requestResponse_y == null ? null : this.callbacks.saveBuffersToTempFiles(requestResponse_y), this.callbacks.saveBuffersToTempFiles(requestResponse_w), url, original_len, low_len_data, original_len_data, matchedColor));
         this.fireTableDataChanged();
         this.logTable.setRowSelectionInterval(this.select_row, this.select_row);
     }
@@ -622,9 +637,15 @@ IMessageEditorController {
             BurpExtender.this.requestViewer.setMessage(logEntry.requestResponse.getRequest(), true);
             BurpExtender.this.responseViewer.setMessage(logEntry.requestResponse.getResponse(), false);
             BurpExtender.this.currentlyDisplayedItem = logEntry.requestResponse;
-            BurpExtender.this.requestViewer_1.setMessage(logEntry.requestResponse_1.getRequest(), true);
-            BurpExtender.this.responseViewer_1.setMessage(logEntry.requestResponse_1.getResponse(), false);
-            BurpExtender.this.currentlyDisplayedItem_1 = logEntry.requestResponse_1;
+            if (logEntry.requestResponse_1 != null) {
+                BurpExtender.this.requestViewer_1.setMessage(logEntry.requestResponse_1.getRequest(), true);
+                BurpExtender.this.responseViewer_1.setMessage(logEntry.requestResponse_1.getResponse(), false);
+                BurpExtender.this.currentlyDisplayedItem_1 = logEntry.requestResponse_1;
+            } else {
+                BurpExtender.this.requestViewer_1.setMessage(new byte[0], true);
+                BurpExtender.this.responseViewer_1.setMessage(new byte[0], false);
+                BurpExtender.this.currentlyDisplayedItem_1 = null;
+            }
             BurpExtender.this.requestViewer_2.setMessage(logEntry.requestResponse_2.getRequest(), true);
             BurpExtender.this.responseViewer_2.setMessage(logEntry.requestResponse_2.getResponse(), false);
             BurpExtender.this.currentlyDisplayedItem_2 = logEntry.requestResponse_2;
